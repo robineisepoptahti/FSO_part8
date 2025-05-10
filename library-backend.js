@@ -113,7 +113,8 @@ type Book {
 
 type Author {
     name: String!
-    bookCount: Int!
+    bookCount: Int
+    born: Int
     }
 
 type Mutation {
@@ -123,6 +124,13 @@ type Mutation {
   published: Int
   genres: [String!]
 ): Book
+
+
+
+editAuthor (
+name: String!
+setBornTo: Int!
+): Author
 }
 `;
 
@@ -157,6 +165,15 @@ const resolvers = {
         }
       }
       return { title: args.title, author: args.author };
+    },
+    editAuthor: (root, args) => {
+      const author = authors.find((auth) => auth.name === args.name);
+      if (author) {
+        authors = authors.filter((auth) => auth.name !== args.name);
+        authors = authors.concat({ ...author, born: args.setBornTo });
+        return { name: args.name, born: args.setBornTo };
+      }
+      return null;
     },
   },
 };
