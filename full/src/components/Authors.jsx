@@ -52,10 +52,16 @@ const Authors = (props) => {
         <div>
           <br />
           name
-          <input
-            value={name}
-            onChange={({ target }) => setAuthor(target.value)}
-          />
+          <select onChange={({ target }) => setAuthor(target.value)}>
+            <option key="default" value="">
+              Choose author
+            </option>
+            {authors.map((entry) => (
+              <option key={entry.name} value={entry.name}>
+                {entry.name}
+              </option>
+            ))}
+          </select>
           <br />
           born
           <input
