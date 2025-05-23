@@ -154,27 +154,55 @@ setBornTo: Int!
 
 const resolvers = {
   Query: {
-    bookCount: () => books.length,
-    authorCount: () => authors.length,
-    allBooks: (root, args) => {
-      if (args.genre) {
-        books = books.filter((book) => book.genres.includes(args.genre));
-      }
-      if (args.author) {
-        books = books.filter((book) => book.author === args.author);
-      }
-      return books;
+    bookCount: async () => {
+      const foundBooks = await Book.find({});
+      return foundBooks.length;
     },
-    allAuthors: () => authors,
+    authorCount: async () => {
+      const foundBooks = await Author.find({});
+      return foundBooks.length;
+    },
+    allBooks: async (root, args) => {
+      let foundBooks = null;
+      if (args.genre && args.author) {
+        const foundAuthor = await Author.findOne({ name: args.author });
+        if (!foundAuthor) {
+          foundBooks = [];
+        } else {
+          foundBooks = await Book.find({
+            genres: args.genre,
+            author: foundAuthor._id,
+          });
+        }
+      } else if (args.genre) {
+        foundBooks = await Book.find({ genres: args.genre });
+      } else if (args.author) {
+        const foundAuthor = await Author.findOne({ name: args.author });
+        if (!foundAuthor) {
+          foundBooks = [];
+        } else {
+          foundBooks = await Book.find({ author: foundAuthor._id });
+        }
+      } else {
+        foundBooks = await Book.find({});
+      }
+      return foundBooks;
+    },
+    allAuthors: async () => {
+      const foundAuthor = await Author.find({});
+      return foundAuthor;
+    },
   },
   Author: {
-    bookCount: (root) => {
-      return books.filter((book) => book.author === root.name).length;
+    bookCount: async (root) => {
+      const count = await Book.find({ author: root._id });
+      return count.length;
     },
   },
   Book: {
-    author: (root) => {
-      return authors.find((auth) => auth.name === root.author);
+    author: async (root) => {
+      const author = await Author.findOne({ _id: root.author });
+      return author;
     },
   },
   Mutation: {
@@ -183,26 +211,28 @@ const resolvers = {
         let foundAuthor = await Author.findOne({ name: args.author });
         if (!foundAuthor) {
           foundAuthor = new Author({ name: args.author });
-          authors = authors.concat({ name: args.author });
           await foundAuthor.save();
         }
         const book = new Book({
           ...args,
           author: foundAuthor._id,
         });
-        books = books.concat(book);
         const saved = await book.save();
         return saved;
       }
     },
-    editAuthor: (root, args) => {
-      const author = authors.find((auth) => auth.name === args.name);
-      if (author) {
-        authors = authors.filter((auth) => auth.name !== args.name);
-        authors = authors.concat({ ...author, born: args.setBornTo });
-        return { name: args.name, born: args.setBornTo };
+    editAuthor: async (root, args) => {
+      let copy = await Author.findOne({ name: args.name });
+      if (copy) {
+        const result = await Author.updateOne(
+          { name: args.name },
+          { born: args.setBornTo }
+        );
+        if (result.acknowledged) {
+          copy = await Author.findOne({ name: args.name });
+        }
       }
-      return null;
+      return copy;
     },
   },
 };
