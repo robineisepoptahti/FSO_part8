@@ -4,6 +4,7 @@ const Book = require("./models/Book");
 const Author = require("./models/Author");
 const mongoose = require("mongoose");
 require("dotenv").config();
+const { GraphQLError } = require("graphql");
 
 mongoose.set("strictQuery", false);
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -208,31 +209,51 @@ const resolvers = {
   Mutation: {
     addBook: async (root, args) => {
       if (args.author) {
-        let foundAuthor = await Author.findOne({ name: args.author });
-        if (!foundAuthor) {
-          foundAuthor = new Author({ name: args.author });
-          await foundAuthor.save();
+        try {
+          let foundAuthor = await Author.findOne({ name: args.author });
+          if (!foundAuthor) {
+            foundAuthor = new Author({ name: args.author });
+            await foundAuthor.save();
+          }
+          const book = new Book({
+            ...args,
+            author: foundAuthor._id,
+          });
+          const saved = await book.save();
+          return saved;
+        } catch (error) {
+          throw new GraphQLError("Adding book failed", {
+            extensions: {
+              code: "BAD_USER_INPUT",
+              invalidArgs: args.name,
+              error,
+            },
+          });
         }
-        const book = new Book({
-          ...args,
-          author: foundAuthor._id,
-        });
-        const saved = await book.save();
-        return saved;
       }
     },
     editAuthor: async (root, args) => {
-      let copy = await Author.findOne({ name: args.name });
-      if (copy) {
-        const result = await Author.updateOne(
-          { name: args.name },
-          { born: args.setBornTo }
-        );
-        if (result.acknowledged) {
-          copy = await Author.findOne({ name: args.name });
+      try {
+        let copy = await Author.findOne({ name: args.name });
+        if (copy) {
+          const result = await Author.updateOne(
+            { name: args.name },
+            { born: args.setBornTo }
+          );
+          if (result.acknowledged) {
+            copy = await Author.findOne({ name: args.name });
+          }
         }
+        return copy;
+      } catch (error) {
+        throw new GraphQLError("Editing author failed", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.name,
+            error,
+          },
+        });
       }
-      return copy;
     },
   },
 };
