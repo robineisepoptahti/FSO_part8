@@ -21,6 +21,7 @@ mongoose
     console.log("error connection to MongoDB:", error.message);
   });
 
+/*
 let authors = [
   {
     name: "Robert Martin",
@@ -47,7 +48,6 @@ let authors = [
   },
 ];
 
-/*
  * Suomi:
  * Saattaisi olla järkevämpää assosioida kirja ja sen tekijä tallettamalla kirjan yhteyteen tekijän nimen sijaan tekijän id
  * Yksinkertaisuuden vuoksi tallennamme kuitenkin kirjan yhteyteen tekijän nimen
@@ -59,7 +59,6 @@ let authors = [
  * Spanish:
  * Podría tener más sentido asociar un libro con su autor almacenando la id del autor en el contexto del libro en lugar del nombre del autor
  * Sin embargo, por simplicidad, almacenaremos el nombre del autor en conexión con el libro
- */
 
 let books = [
   {
@@ -113,8 +112,7 @@ let books = [
   },
 ];
 
-/*
-  you can remove the placeholder query once your first one has been implemented 
+you can remove the placeholder query once your first one has been implemented 
 */
 
 const typeDefs = `
