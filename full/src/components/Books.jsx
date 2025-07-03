@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { ALL_BOOKS, FILTER_BOOKS } from "../queries";
+import { ALL_BOOKS, ALL_AUTHORS, FILTER_BOOKS } from "../queries";
 import { useState } from "react";
 
 const Books = (props) => {
